@@ -1,0 +1,7 @@
+;Cox-CC;CoxTime;DeepHit;pseudo-continuous;pseudo-discrete;pseudo-km;pseudo-optim
+neurons;16;128;16;32;32;128;128
+drop;0.2;0.6;0.2;0.5;0.7;0.6;0.6
+activation;relu;relu;relu;elu;tanh;relu;relu
+lr_opt;0.01;0.0025;0.01;0.0001;0.01;0.0025;0.0025
+optimizer;adam;rmsprop;adam;sgdwr;sgdwr;rmsprop;rmsprop
+n_layers;1;2;1;2;3;2;2
