@@ -23,7 +23,7 @@ from sklearn.model_selection import KFold
 
 
 
-def objective(x_train, neurons, drop,  activation, lr_opt, optimizer, n_layers, name, labtrans = ""):
+def build_model(x_train, neurons, drop,  activation, lr_opt, optimizer, n_layers, name, labtrans =""):
     """ Define the structure of the neural network for a Cox-MLP (CC), CoxTime and  DeepHit
     # Arguments
         x_train: input data as formated by the function "prepare_data"
@@ -37,8 +37,7 @@ def objective(x_train, neurons, drop,  activation, lr_opt, optimizer, n_layers, 
         labtrans: transformed input variables, including the time variable
     # Returns
         model: pycox model (based on pytorch) with the architecture defined previously
-        callbacks: callbacks function
-    
+        callbacks: callbacks function   
     """
     in_features = x_train.shape[1]
     if labtrans !="":
@@ -47,30 +46,30 @@ def objective(x_train, neurons, drop,  activation, lr_opt, optimizer, n_layers, 
         out_features = 1
     nb_neurons = [neurons]*n_layers
     
-    if optimizer  == "rmsprop" :
+    if optimizer  == "RMSprop" :
         optim = tt.optim.RMSprop()
         callbacks = [tt.callbacks.Callback()]
         
-    elif optimizer == "adam" : 
+    elif optimizer == "Adam" : 
         optim = tt.optim.Adam()
         callbacks = [tt.callbacks.Callback()]
 
-    elif optimizer == "adam_amsgrad" : 
+    elif optimizer == "Adam_AMSGrad" : 
         optim = tt.optim.Adam(amsgrad = True)
         callbacks = [tt.callbacks.Callback()]
         
-    elif optimizer == "sgdwr":
+    elif optimizer == "SGDWR":
         optim = tt.optim.SGD(momentum=0.9)
         callbacks = [tt.callbacks.LRCosineAnnealing()]
-        
-    if activation == 'relu':
+
+    if activation == 'ReLu':
         act = torch.nn.ReLU
     elif activation == 'elu':
         act = torch.nn.ELU
-    elif activation == 'tanh':
+    elif activation == 'Tanh':
         act = torch.nn.Tanh
 
-    if name == "Cox-CC":
+    if name == "CoxCC":
         net = tt.practical.MLPVanilla(in_features, nb_neurons, out_features, batch_norm = True,
                                   dropout = drop, activation = act, output_bias=False)
         model = CoxCC(net, optim)
@@ -86,9 +85,7 @@ def objective(x_train, neurons, drop,  activation, lr_opt, optimizer, n_layers, 
         
     model.optimizer.set_lr(lr_opt)
     
-    return model,callbacks
-
-
+    return model, callbacks
 
 
 class CosineAnnealingLearningRateSchedule(Callback):
@@ -115,10 +112,23 @@ class CosineAnnealingLearningRateSchedule(Callback):
         self.lrates.append(lr)
         
 
-def objective_pseudobs(x_train, neurons, drop,  activation, lr_opt, optimizer, n_layers):
-     
-    n_epochs = 100
+def build_model_pseudobs(x_train, neurons, drop,  activation, lr_opt, optimizer, n_layers,n_epochs):
+    """ Define the structure of the neural network for models with pseudo-observations (optim, continuous, discrete, km)
+    # Arguments
+        x_train: input data as formated by the function "prepare_data"
+        neurons: number of neurons per hidden layer in the neural network
+        drop: dropout rate applied after each hidden layer
+        activation: activation function applied after each hidden layer
+        lr_opt: learning rate chosen for optimization
+        optimizer: optimization algorithm 
+        n_layers: number of hidden layers 
+        n_epochs: number of epochs used for training the model
+    # Returns
+        model: keras model with the architecture defined previously
+        callbacks: callbacks function   
+    """
     in_features = x_train.shape[1]
+
     model = Sequential()
     model.add(Dense(neurons, input_dim=in_features, activation=activation))
     model.add(BatchNormalization(epsilon=1e-05, momentum=0.1))
@@ -136,26 +146,25 @@ def objective_pseudobs(x_train, neurons, drop,  activation, lr_opt, optimizer, n
         
     model.add(Dense(1, activation='sigmoid'))
     
-    if optimizer == "rmsprop":
+    if optimizer == "RMSprop":
         optim = optimizers.RMSprop(learning_rate= lr_opt, rho=0.9)
-        ca = [Callback()]
+        callbacks = [Callback()]
 
-    elif optimizer == "adam":
+    elif optimizer == "Adam":
         optim = optimizers.Adam(learning_rate= lr_opt, beta_1=0.9, beta_2=0.999, amsgrad=False)
-        ca = [Callback()]
+        callbacks = [Callback()]
 
-    elif optimizer == "adam_amsgrad":
+    elif optimizer == "Adam_AMSGrad":
         optim = optimizers.Adam(learning_rate= lr_opt, beta_1=0.9, beta_2=0.999, amsgrad=True)
-        ca = [Callback()]
+        callbacks = [Callback()]
 
-    elif optimizer == "sgdwr":
+    elif optimizer == "SGDWR":
         optim = optimizers.SGD(momentum=0.9)
         n_cycles = n_epochs / 50
-        ca = [CosineAnnealingLearningRateSchedule(n_epochs, n_cycles, 0.01)]
+        callbacks = [CosineAnnealingLearningRateSchedule(n_epochs, n_cycles, 0.01)]
     
     model.compile(
       optimizer=optim,
         loss = 'mean_squared_error'
     )
-
-    return(model,ca)
+    return(model,callbacks)

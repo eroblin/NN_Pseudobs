@@ -1,0 +1,3 @@
+rate;n_layers;neurons;batch_size;dropout;activation;optimizer;lr
+0.2;3;125;128;0.2464294268443628;relu;RMSprop;0.005119077443834683
+0.6;3;88;256;0.009375354134755683;relu;SGDWR;0.0026048613408628176

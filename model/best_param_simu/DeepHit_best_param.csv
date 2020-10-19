@@ -1,0 +1,3 @@
+rate;n_layers;neurons;batch_size;dropout;activation;optimizer;lr
+0.2;2;117;16;0.062158906970573566;ReLu;SGDWR;0.027460240010355845
+0.6;2;49;32;0.4059762394151809;elu;Adam_AMSGrad;0.04584817050256584
